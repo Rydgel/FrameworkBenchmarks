@@ -16,8 +16,8 @@ import           GHC.Generics
 
 
 data Fortune = Fortune
-    { _idF      :: !Integer
-    , _messageF :: !T.Text
+    { _idF      :: {-# UNPACK #-} !Int
+    , _messageF :: {-# UNPACK #-} !T.Text
     } deriving (Show, Generic)
 
 -- | JSON serialization
