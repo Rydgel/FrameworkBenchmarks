@@ -10,6 +10,10 @@ packages:
 # Packages to be pulled from upstream that are not in the resolver (e.g., acme-missiles-0.3)
 extra-deps:
 - aeson-0.11.0.0
+- hasql-0.19.9
+- hasql-pool-0.4
+- bytestring-tree-builder-0.2.5
+- postgresql-binary-0.8.1
 
 # Override default flag values for local packages and extra-deps
 flags: {}

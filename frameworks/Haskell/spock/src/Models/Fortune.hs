@@ -7,17 +7,21 @@ module Models.Fortune
     ) where
 
 import           Data.Aeson
-import           Data.Monoid                        ((<>))
+import           Data.Int
+import           Data.Monoid    ((<>))
 import           Data.Ord
-import qualified Data.Text                          as T
-import qualified Database.PostgreSQL.Simple         as PG
-import           Database.PostgreSQL.Simple.FromRow
+import qualified Data.Text      as T
 import           GHC.Generics
+import qualified Hasql.Decoders as HD
+import qualified Hasql.Encoders as HE
+import qualified Hasql.Pool     as HP
+import qualified Hasql.Query    as HQ
+import qualified Hasql.Session  as H
 
 
 data Fortune = Fortune
-    { _idF      :: {-# UNPACK #-} !Int
-    , _messageF :: {-# UNPACK #-} !T.Text
+    { _idF      :: !Int32
+    , _messageF :: !T.Text
     } deriving (Show, Generic)
 
 -- | JSON serialization
@@ -28,10 +32,10 @@ instance ToJSON Fortune where
               )
     {-# INLINE toEncoding #-}
 
--- | Transforming a database row into a World datatype.
-instance FromRow Fortune where
-    fromRow = Fortune <$> field <*> field
-    {-# INLINE fromRow #-}
+-- | Transforming a database row into a Fortune datatype.
+fortuneRow :: HD.Row Fortune
+fortuneRow = Fortune <$> HD.value HD.int4 <*> HD.value HD.text
+{-# INLINE fortuneRow #-}
 
 -- | For sorting purposes
 instance Eq Fortune where
@@ -44,6 +48,16 @@ instance Ord Fortune where
     compare = comparing _messageF
     {-# INLINE compare #-}
 
-fetchFortunes :: PG.Connection -> IO [Fortune]
-fetchFortunes c = PG.query_ c "SELECT id, message FROM Fortune"
+
+fetchFortunes :: HP.Pool -> IO [Fortune]
+fetchFortunes pool = do
+    result <- HP.use pool sess
+    return $ case result of
+      Left _ -> []
+      Right xs -> xs
+    where
+      sess    = H.query () $ HQ.statement sql encoder decoder True
+      sql     = "SELECT id, message FROM Fortune"
+      encoder = HE.unit
+      decoder = HD.rowsList fortuneRow
 {-# INLINE fetchFortunes #-}
