@@ -43,7 +43,7 @@ worldRow = World <$> HD.value HD.int4 <*> HD.value HD.int4
 -- | Get a World by Id, this will return a Just World, or Nothing
 -- if the id is not in the database.
 fetchWorldById :: Int32 -> H.Session (Maybe World)
-fetchWorldById i =
+fetchWorldById !i =
     sess where
         sess    = H.query i $ HQ.statement sql encoder decoder True
         sql     = "SELECT id, randomNumber FROM World WHERE id = $1"
@@ -54,7 +54,7 @@ fetchWorldById i =
 -- | Get a random World from the database. For the tests
 -- the id must be bound between 1-10000
 getRandomWorld :: HP.Pool -> IO (Maybe World)
-getRandomWorld pool = do
+getRandomWorld !pool = do
     i <- liftIO (randomRIO (1, 10000))
     result <- HP.use pool (fetchWorldById i)
     return $ case result of
@@ -64,7 +64,7 @@ getRandomWorld pool = do
 
 
 updateWorld :: Int32 -> World -> H.Session ()
-updateWorld i (World _id _) =
+updateWorld !i !(World _id _) =
     sess where
         sess    = H.query i $ HQ.statement sql encoder decoder True
         sql     = "UPDATE World SET randomNumber = $1 WHERE id = $2"
@@ -75,7 +75,7 @@ updateWorld i (World _id _) =
 
 -- | Update a World with a random number
 updateWorldRandom :: HP.Pool -> World -> IO World
-updateWorldRandom pool w@(World _id _) = do
+updateWorldRandom !pool !w@(World _id _) = do
     i <- liftIO $ randomRIO (1, 10000)
     result <- HP.use pool (updateWorld i w)
     case result of
